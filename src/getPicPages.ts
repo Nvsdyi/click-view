@@ -33,6 +33,14 @@ async function getAllPicPages(url: string): Promise<string[]> {
         picturePages.push(...pics);
     }
 
+    picturePages.sort((a, b) => {
+        const aNum = Number(a.split("-")[1]);
+        const bNum = Number(b.split("-")[1]);
+        return aNum - bNum;
+    });
+
+    console.log("All picture pages:", picturePages);
+
     return picturePages;
 }
 

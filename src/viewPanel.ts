@@ -1,20 +1,22 @@
-const map = new Map<string, string>();
+const loaded = new Map<string, string>();
+const loading = new Set<string>();
 
 async function createViewPanel(picturePages: string[]) {
     const panel = document.createElement("div");
     panel.id = "view-panel";
-    panel.onclick = (e) => {
+    panel.addEventListener("click", (e) => {
         if (e.target === panel) {
             panel.remove();
             document.body.style.overflow = "auto";
         }
-    };
+    });
     document.body.prepend(panel);
 
-    window.addEventListener("keydown", (e) => {
+    const handler = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
             panel.remove();
             document.body.style.overflow = "auto";
+            window.removeEventListener("keydown", handler);
         } else if (e.key === "ArrowRight") {
             // Go to the next image
             setImage(panel, picturePages, 1);
@@ -22,7 +24,9 @@ async function createViewPanel(picturePages: string[]) {
             // Go to the previous image
             setImage(panel, picturePages, -1);
         }
-    });
+    };
+
+    window.addEventListener("keydown", handler);
 
     // Set the initial image
     const html = `
@@ -47,6 +51,8 @@ async function setImage(
 
     const newIndex = currentIndex + direction;
 
+    console.log("New Index:", newIndex);
+
     if (newIndex >= 0 && newIndex < picturePages.length) {
         const html = `
         <div class="view-panel-content">
@@ -55,6 +61,8 @@ async function setImage(
         )}" alt="Comic Image">
         </div>`;
         panel.innerHTML = html;
+    } else {
+        return;
     }
 
     // Preload next 3 and previous images
@@ -66,8 +74,8 @@ async function setImage(
 }
 
 async function loadImage(url: string): Promise<string> {
-    if (map.has(url)) {
-        return map.get(url)!;
+    if (loaded.has(url) && !loading.has(url)) {
+        return loaded.get(url)!;
     }
 
     const response = await fetch(url).then((res) => {
@@ -86,17 +94,15 @@ async function loadImage(url: string): Promise<string> {
         throw new Error(`No image found in the response for: ${url}`);
     }
 
+    loading.add(url);
+
     // 等待图片完全加载
-    await new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = imgElement.src;
-        img.onload = resolve;
-        img.onerror = () =>
-            reject(new Error(`Failed to load image: ${imgElement.src}`));
-    });
+    const img = new Image();
+    img.src = imgElement.src;
 
     const imgSrc = imgElement.src;
-    map.set(url, imgSrc);
+    loaded.set(url, imgSrc);
+    loading.delete(url);
 
     return imgSrc;
 }

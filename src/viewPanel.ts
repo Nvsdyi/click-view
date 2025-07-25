@@ -3,9 +3,11 @@ const map = new Map<string, string>();
 async function createViewPanel(picturePages: string[]) {
     const panel = document.createElement("div");
     panel.id = "view-panel";
-    panel.onclick = () => {
-        panel.remove();
-        document.body.style.overflow = "auto";
+    panel.onclick = (e) => {
+        if (e.target === panel) {
+            panel.remove();
+            document.body.style.overflow = "auto";
+        }
     };
     document.body.prepend(panel);
 
@@ -68,35 +70,33 @@ async function loadImage(url: string): Promise<string> {
         return map.get(url)!;
     }
 
-    const iframe = document.createElement("iframe");
-    iframe.src = url;
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-
-    // Wait for the iframe to load
-    await new Promise((resolve) => {
-        iframe.onload = resolve;
+    const response = await fetch(url).then((res) => {
+        if (!res.ok) {
+            throw new Error(`Failed to load image: ${url}`);
+        }
+        return res.text();
     });
 
-    const imgElement = iframe.contentDocument?.querySelector(
-        "#img"
-    ) as HTMLImageElement;
+    // 构建DOM树
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(response, "text/html");
+
+    const imgElement = doc.querySelector("#img") as HTMLImageElement;
+    if (!imgElement) {
+        throw new Error(`No image found in the response for: ${url}`);
+    }
 
     // 等待图片完全加载
     await new Promise((resolve, reject) => {
-        if (imgElement.complete) {
-            resolve(void 0);
-        } else {
-            imgElement.onload = () => resolve(void 0);
-            imgElement.onerror = reject;
-        }
+        const img = new Image();
+        img.src = imgElement.src;
+        img.onload = resolve;
+        img.onerror = () =>
+            reject(new Error(`Failed to load image: ${imgElement.src}`));
     });
 
     const imgSrc = imgElement.src;
     map.set(url, imgSrc);
-
-    // Clean up iframe
-    document.body.removeChild(iframe);
 
     return imgSrc;
 }

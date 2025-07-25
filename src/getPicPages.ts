@@ -10,20 +10,21 @@ async function getAllPicPages(url: string): Promise<string[]> {
     // Get all pictures from the comic link
     const picturePages: string[] = [];
 
-    const iframe = document.createElement("iframe");
-    iframe.src = url;
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-
-    // Wait for the iframe to load
-    await new Promise((resolve) => {
-        iframe.onload = resolve;
+    const response = await fetch(url).then((res) => {
+        if (!res.ok) {
+            throw new Error(`Failed to load image: ${url}`);
+        }
+        return res.text();
     });
 
-    // 获取所有页面链接
-    const pages = Array.from(
-        iframe.contentDocument?.querySelectorAll(".ptt a") || []
-    ).map((page) => (page as HTMLAnchorElement).href);
+    // Build the DOM tree
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(response, "text/html");
+
+    // Retrieve all page links
+    const pages = Array.from(doc.querySelectorAll(".ptt a")).map(
+        (page) => (page as HTMLAnchorElement).href
+    );
 
     if (pages.length > 1) pages.pop(); // Remove the last page which is usually the next page link
 
@@ -32,30 +33,25 @@ async function getAllPicPages(url: string): Promise<string[]> {
         picturePages.push(...pics);
     }
 
-    // Remove the iframe after use
-    document.body.removeChild(iframe);
-
     return picturePages;
 }
 
 async function getCurrentPagePicPage(url: string): Promise<string[]> {
-    const iframe = document.createElement("iframe");
-    iframe.src = url;
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-
-    // Wait for the iframe to load
-    await new Promise((resolve) => {
-        iframe.onload = resolve;
+    const response = await fetch(url).then((res) => {
+        if (!res.ok) {
+            throw new Error(`Failed to load image: ${url}`);
+        }
+        return res.text();
     });
 
-    // 获取所有图片链接
-    const picturePages = Array.from(
-        iframe.contentDocument?.querySelectorAll("#gdt > a") || []
-    ).map((pic) => (pic as HTMLAnchorElement).href);
+    // Build the DOM tree
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(response, "text/html");
 
-    // Remove the iframe after use
-    document.body.removeChild(iframe);
+    // Retrieve all image links
+    const picturePages = Array.from(doc.querySelectorAll("#gdt > a")).map(
+        (pic) => (pic as HTMLAnchorElement).href
+    );
 
     return picturePages;
 }

@@ -1,0 +1,27 @@
+.click-view-snackbar {
+    position: fixed;
+    width: 200px;
+    transform: translate(calc(50vw - 50%), 50%);
+    text-align: center;
+    padding: 16px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: opacity 0.25s;
+    opacity: 0;
+    font-size: larger;
+}
+
+.click-view-snackbar-info {
+    background-color: #2196f3;
+    color: white;
+}
+
+.click-view-snackbar-error {
+    background-color: #f44336;
+    color: white;
+}
+
+.click-view-snackbar-show {
+    opacity: 1;
+}

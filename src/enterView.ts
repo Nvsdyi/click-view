@@ -1,7 +1,10 @@
 import { getComicLink, getAllPicPages } from "./getPicPages";
 import { createViewPanel } from "./viewPanel";
+import { showSnackBar } from "./snackBar";
 
 export async function enterView(e: Event) {
+    showSnackBar("加载中...", "info");
+
     // Get the comic link
     const comicLink = getComicLink(e);
 

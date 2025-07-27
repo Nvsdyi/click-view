@@ -1,3 +1,5 @@
+import { showSnackBar } from "./snackBar";
+
 const loaded = new Map<string, string>();
 const loading = new Set<string>();
 
@@ -19,10 +21,18 @@ async function createViewPanel(picturePages: string[]) {
             window.removeEventListener("keydown", handler);
         } else if (e.key === "ArrowRight") {
             // Go to the next image
-            setImage(panel, picturePages, 1);
+            try {
+                setImage(panel, picturePages, 1);
+            } catch (error) {
+                showSnackBar(`加载下一张图片失败 ${error}`, "error");
+            }
         } else if (e.key === "ArrowLeft") {
             // Go to the previous image
-            setImage(panel, picturePages, -1);
+            try {
+                setImage(panel, picturePages, -1);
+            } catch (error) {
+                showSnackBar(`加载上一张图片失败 ${error}`, "error");
+            }
         }
     };
 
@@ -36,6 +46,7 @@ async function createViewPanel(picturePages: string[]) {
             )}" alt="Comic Image">
         </div>`;
     panel.innerHTML = html;
+    setImage(panel, picturePages, 0);
 }
 
 async function setImage(
@@ -62,11 +73,12 @@ async function setImage(
         </div>`;
         panel.innerHTML = html;
     } else {
+        showSnackBar("没有更多图片了", "info");
         return;
     }
 
     // Preload next 3 and previous images
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 5; i++) {
         if (newIndex + i < picturePages.length) {
             loadImage(picturePages[newIndex + i]);
         }

@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
                     icon: "https://vitejs.dev/logo.svg",
                     namespace: "npm/vite-plugin-monkey",
                     match: ["https://exhentai.org/*", "https://e-hentai.org/*"],
+                    version: "1.0.0",
                 },
             }),
         ],

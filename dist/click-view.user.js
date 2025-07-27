@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name       click-view
 // @namespace  npm/vite-plugin-monkey
-// @version    0.0.0
+// @version    1.0.0
 // @icon       https://vitejs.dev/logo.svg
 // @match      https://exhentai.org/*
 // @match      https://e-hentai.org/*

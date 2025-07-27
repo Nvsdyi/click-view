@@ -8,7 +8,7 @@
 // @grant      GM_addStyle
 // ==/UserScript==
 
-(e=>{if(typeof GM_addStyle=="function"){GM_addStyle(e);return}const t=document.createElement("style");t.textContent=e,document.head.append(t)})(" #view-panel{position:fixed;top:0;left:0;width:100vw;height:100vh;background-color:#000c;display:flex;justify-content:center;align-items:center;z-index:999}#view-panel img{object-fit:contain;max-height:100vh;max-width:100vw} ");
+(e=>{if(typeof GM_addStyle=="function"){GM_addStyle(e);return}const t=document.createElement("style");t.textContent=e,document.head.append(t)})(" .click-view-snackbar{position:fixed;width:200px;transform:translate(calc(50vw - 50%),50%);text-align:center;padding:16px;border-radius:15px;box-shadow:0 2px 10px #0000001a;z-index:1000;transition:opacity .25s;opacity:0;font-size:larger}.click-view-snackbar-info{background-color:#2196f3;color:#fff}.click-view-snackbar-error{background-color:#f44336;color:#fff}.click-view-snackbar-show{opacity:1}#view-panel{position:fixed;top:0;left:0;width:100vw;height:100vh;background-color:#000c;display:flex;justify-content:center;align-items:center;z-index:999}#view-panel img{object-fit:contain;max-height:100vh;max-width:100vw} ");
 
 (function () {
   'use strict';
@@ -56,6 +56,26 @@
     );
     return picturePages;
   }
+  function showSnackBar(message, type, duration = 3e3) {
+    const snackBarElement = document.createElement("div");
+    snackBarElement.classList = "click-view-snackbar click-view-snackbar-" + type;
+    snackBarElement.innerHTML = `
+        <span>${message}</span>
+    `;
+    document.body.prepend(snackBarElement);
+    snackBarElement.offsetWidth;
+    snackBarElement.classList.add("click-view-snackbar-show");
+    setTimeout(() => {
+      snackBarElement.classList.remove("click-view-snackbar-show");
+      snackBarElement.addEventListener(
+        "transitionend",
+        () => {
+          snackBarElement.remove();
+        },
+        { once: true }
+      );
+    }, duration);
+  }
   const loaded = /* @__PURE__ */ new Map();
   const loading = /* @__PURE__ */ new Set();
   async function createViewPanel(picturePages) {
@@ -74,9 +94,17 @@
         document.body.style.overflow = "auto";
         window.removeEventListener("keydown", handler);
       } else if (e.key === "ArrowRight") {
-        setImage(panel, picturePages, 1);
+        try {
+          setImage(panel, picturePages, 1);
+        } catch (error) {
+          showSnackBar(`加载下一张图片失败 ${error}`, "error");
+        }
       } else if (e.key === "ArrowLeft") {
-        setImage(panel, picturePages, -1);
+        try {
+          setImage(panel, picturePages, -1);
+        } catch (error) {
+          showSnackBar(`加载上一张图片失败 ${error}`, "error");
+        }
       }
     };
     window.addEventListener("keydown", handler);
@@ -87,6 +115,7 @@
   )}" alt="Comic Image">
         </div>`;
     panel.innerHTML = html;
+    setImage(panel, picturePages, 0);
   }
   async function setImage(panel, picturePages, direction) {
     const currentIndex = Number(
@@ -104,9 +133,10 @@
         </div>`;
       panel.innerHTML = html;
     } else {
+      showSnackBar("没有更多图片了", "info");
       return;
     }
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 5; i++) {
       if (newIndex + i < picturePages.length) {
         loadImage(picturePages[newIndex + i]);
       }
@@ -137,6 +167,7 @@
     return imgSrc;
   }
   async function enterView(e) {
+    showSnackBar("加载中...", "info");
     const comicLink = getComicLink(e);
     const picturePages = await getAllPicPages(comicLink);
     createViewPanel(picturePages);

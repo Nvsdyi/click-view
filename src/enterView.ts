@@ -4,6 +4,7 @@ import { showSnackBar } from "./snackBar";
 
 export async function enterView(e: Event) {
     showSnackBar("加载中...", "info");
+    console.debug("enterView", e);
 
     // Get the comic link
     const comicLink = getComicLink(e);
